@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+    var tabs = [];
+    
+    safari.application.addEventListener('message', messageHandler, false);
+    safari.application.addEventListener('command', commandHandler, false);    
+
+    function messageHandler(e)
+    {
+        if (e.name == 'were-in')
+            tabs.push(e.target);
+            
+        if (e.name == 'were-out')
+            tabs = tabs.filter(function(x){ if (x != e.target) return x; });
+            
+        console.log('tabs', tabs);
+    }
+    
+    function commandHandler(e)
+    {
+        if (e.command == 'unread')
+        {
+            activateTab();
+        }
+    }
+    
+    function activateTab()
+    {
+        tabs.forEach(function(tab){
+            if (tab.title.match(/\(\d+\)/))
+            {
+                tab.activate();
+                tab.browserWindow.activate();
+                checkTabs();
+            }
+        });
+    }
+    
+    function checkTabs()
+    {
+        var count = 0;
+
+        tabs.forEach(function(tab){
+            if (tab.title.match(/\(\d+\)/))
+                count += parseInt(tab.title.match(/\((\d+)\)/)[1], 10);
+        });
+        
+        safari.extension.toolbarItems.forEach(function(item){
+            item.badge = count;
+        });
+        
+    }
+    
+    setInterval(checkTabs, 1000);
+    </script>
+</head>
+</html>
